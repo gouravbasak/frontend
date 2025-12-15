@@ -13,19 +13,30 @@ type Product = {
   images?: string[];
 };
 
+const API = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
+
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Fetch products
   const loadProducts = async () => {
+    setLoading(true);
     try {
-      const res = await fetch("http://localhost:4000/api/products");
+      const res = await fetch(`${API}/api/products`, {
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: res.statusText }));
+        throw new Error(err?.message || `Status ${res.status}`);
+      }
+
       const data = await res.json();
       setProducts(data);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error("Failed to load products");
+      toast.error(err?.message || "Failed to load products");
     } finally {
       setLoading(false);
     }
@@ -37,31 +48,31 @@ export default function AdminProductsPage() {
 
   // Delete product
   const deleteProduct = async (id: string) => {
-  if (!confirm("Are you sure you want to delete this product?")) return;
+    if (!confirm("Are you sure you want to delete this product?")) return;
 
-  try {
-    const res = await fetch(`http://localhost:4000/api/admin/products/${id}`, {
-      method: "DELETE",
-      credentials: "include", // VERY IMPORTANT
-    });
+    try {
+      const res = await fetch(`${API}/api/admin/products/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => null);
-      toast.error(err?.message || "Failed to delete");
-      return;
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        toast.error(err?.message || "Failed to delete");
+        return;
+      }
+
+      toast.success("Product deleted");
+      setProducts((prev) => prev.filter((p) => p._id !== id));
+    } catch (err) {
+      console.error("Delete error:", err);
+      toast.error("Network error");
     }
-
-    toast.success("Product deleted");
-    setProducts((prev) => prev.filter((p: any) => p._id !== id));
-  } catch (err) {
-    console.error("Delete error:", err);
-    toast.error("Network error");
-  }
-};
-
+  };
 
   return (
     <div>
+      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Products</h1>
 
@@ -73,6 +84,7 @@ export default function AdminProductsPage() {
         </Link>
       </div>
 
+      {/* List */}
       {loading ? (
         <p>Loading products...</p>
       ) : products.length === 0 ? (

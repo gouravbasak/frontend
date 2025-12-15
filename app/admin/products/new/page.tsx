@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
+const API = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
+
 export default function AdminNewProductPage() {
   const router = useRouter();
 
@@ -22,7 +24,7 @@ export default function AdminNewProductPage() {
 
   const saveProduct = async () => {
     try {
-      const res = await fetch("http://localhost:4000/api/admin/products", {
+      const res = await fetch(`${API}/api/admin/products`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -30,16 +32,23 @@ export default function AdminNewProductPage() {
           ...form,
           price: Number(form.price),
           stock: Number(form.stock),
-          images: form.images.split(",").map((s) => s.trim()),
+          images: form.images
+            ? form.images.split(",").map((s) => s.trim())
+            : [],
         }),
       });
 
-      if (!res.ok) throw new Error("Error saving product");
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        toast.error(err?.message || "Failed to save product");
+        return;
+      }
 
       toast.success("Product created!");
       router.push("/admin/products");
     } catch (err) {
-      toast.error("Failed to create product");
+      console.error(err);
+      toast.error("Network error");
     }
   };
 
@@ -54,37 +63,45 @@ export default function AdminNewProductPage() {
           value={form.title}
           onChange={(e) => update("title", e.target.value)}
         />
+
         <textarea
           placeholder="Description"
           className="w-full border p-2 rounded"
           value={form.description}
           onChange={(e) => update("description", e.target.value)}
         />
+
         <input
+          type="number"
           placeholder="Price"
           className="w-full border p-2 rounded"
           value={form.price}
           onChange={(e) => update("price", e.target.value)}
         />
+
         <input
           placeholder="Brand"
           className="w-full border p-2 rounded"
           value={form.brand}
           onChange={(e) => update("brand", e.target.value)}
         />
+
         <input
           placeholder="Category"
           className="w-full border p-2 rounded"
           value={form.category}
           onChange={(e) => update("category", e.target.value)}
         />
+
         <input
           placeholder="Image URLs (comma separated)"
           className="w-full border p-2 rounded"
           value={form.images}
           onChange={(e) => update("images", e.target.value)}
         />
+
         <input
+          type="number"
           placeholder="Stock"
           className="w-full border p-2 rounded"
           value={form.stock}

@@ -5,70 +5,67 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
+const API = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
+
 export default function LoginPage() {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // 👈 NEW
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
-    const res = await fetch("http://localhost:4000/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      const res = await fetch(`${API}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    const data = await res.json();
-    console.log("Login response:", data);
+      const data = await res.json().catch(() => ({}));
 
-    if (res.ok) {
-      toast.success("Login successful!");
+      if (res.ok) {
+        toast.success("Login successful!");
 
-      // Save token + user
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+        // Save token + user if backend returns them
+        if (data.token) localStorage.setItem("token", data.token);
+        if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
 
-      router.push("/");
-    } else {
-      toast.error(data.message || "Invalid credentials");
-      // no redirect on failure
+        router.push("/");
+      } else {
+        toast.error(data.message || "Invalid credentials");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      toast.error("Network error — try again");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-5xl bg-white rounded-3xl shadow-md overflow-hidden flex flex-col md:flex-row">
-        
         {/* LEFT IMAGE */}
         <div className="hidden md:block w-1/2 bg-gray-100">
           <div className="relative h-full w-full">
-            <img
-              src="/login.png"
-              alt="Login visual"
-              className="h-full w-full object-cover"
-            />
+            <img src="/login.png" alt="Login visual" className="h-full w-full object-cover" />
           </div>
         </div>
 
         {/* RIGHT FORM */}
         <div className="w-full md:w-1/2 px-8 md:px-12 py-10 flex flex-col justify-center">
-          <h1 className="text-3xl md:text-4xl font-semibold mb-2">
-            Welcome back!
-          </h1>
-          <p className="text-xs text-gray-600 mb-8">
-            Enter your credentials to access your account
-          </p>
+          <h1 className="text-3xl md:text-4xl font-semibold mb-2">Welcome back!</h1>
+          <p className="text-xs text-gray-600 mb-8">Enter your credentials to access your account</p>
 
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
-
             {/* Email */}
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-gray-700">
-                Email address
-              </label>
+              <label className="text-xs font-medium text-gray-700">Email address</label>
               <input
                 type="email"
                 placeholder="Enter your email"
@@ -76,6 +73,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoFocus
               />
             </div>
 
@@ -83,10 +81,7 @@ export default function LoginPage() {
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between text-xs font-medium text-gray-700">
                 <label>Password</label>
-                <Link
-                  href="/forgot-password"
-                  className="text-xs text-blue-600 hover:underline"
-                >
+                <Link href="/forgot-password" className="text-xs text-blue-600 hover:underline">
                   Forgot password?
                 </Link>
               </div>
@@ -121,9 +116,10 @@ export default function LoginPage() {
             {/* LOGIN BUTTON */}
             <button
               type="submit"
-              className="mt-2 w-full bg-green-700 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-green-800 transition cursor-pointer"
+              disabled={loading}
+              className="mt-2 w-full bg-green-700 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-green-800 transition cursor-pointer disabled:opacity-60"
             >
-              Login
+              {loading ? "Signing in…" : "Login"}
             </button>
           </form>
 
@@ -137,18 +133,12 @@ export default function LoginPage() {
           {/* SOCIAL LOGIN */}
           <div className="flex gap-2 text-xs">
             <button className="w-full border rounded-xl py-2.5 flex items-center justify-center gap-2 hover:bg-gray-50 cursor-pointer">
-              <img
-                src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png"
-                className="h-5 w-5"
-              />
+              <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" className="h-5 w-5" />
               <span>Sign in with Google</span>
             </button>
 
             <button className="w-full border rounded-xl py-2.5 flex items-center justify-center gap-2 hover:bg-gray-50 cursor-pointer">
-              <img
-                src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg"
-                className="h-5 w-4"
-              />
+              <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" className="h-5 w-4" />
               <span>Sign in with Apple</span>
             </button>
           </div>

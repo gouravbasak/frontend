@@ -4,21 +4,23 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
+const API = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
+
 export default function EditProductPage({ params }: any) {
   const router = useRouter();
 
-  // params is a Promise → unwrap inside useEffect
+  // params is a Promise in Next.js App Router → unwrap inside useEffect
   const [productId, setProductId] = useState<string | null>(null);
 
   const [form, setForm] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 👉 unwrap params
+  // Unwrap params
   useEffect(() => {
     async function unwrap() {
       try {
-        const p = await params; // params is promise in Next.js 15
+        const p = await params;
         setProductId(p.id);
       } catch (err) {
         console.error("Param unwrap failed:", err);
@@ -27,10 +29,9 @@ export default function EditProductPage({ params }: any) {
     unwrap();
   }, [params]);
 
-  // 👉 load product once id is available
+  // Load product when productId is available
   useEffect(() => {
-    if (!productId) return;
-    loadProduct(productId);
+    if (productId) loadProduct(productId);
   }, [productId]);
 
   // ---------------------------------------------------------
@@ -41,16 +42,15 @@ export default function EditProductPage({ params }: any) {
     setError(null);
 
     try {
-      const res = await fetch(`http://localhost:4000/api/admin/products/${id}`, {
+      const res = await fetch(`${API}/api/admin/products/${id}`, {
         credentials: "include",
       });
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         const msg = err?.message || `Server returned ${res.status}`;
+        toast.error(msg);
         setError(msg);
-        toast.error("Failed to load product: " + msg);
-        setLoading(false);
         return;
       }
 
@@ -71,7 +71,6 @@ export default function EditProductPage({ params }: any) {
     }
   };
 
-  // update helper
   const update = (key: string, value: any) =>
     setForm((prev: any) => ({ ...prev, [key]: value }));
 
@@ -82,7 +81,7 @@ export default function EditProductPage({ params }: any) {
     if (!productId) return;
 
     try {
-      const res = await fetch(`http://localhost:4000/api/admin/products/${productId}`, {
+      const res = await fetch(`${API}/api/admin/products/${productId}`, {
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -111,15 +110,13 @@ export default function EditProductPage({ params }: any) {
   };
 
   // ---------------------------------------------------------
-  // UI Render
+  // UI
   // ---------------------------------------------------------
+
   if (loading) return <p>Loading...</p>;
   if (error) return <div className="text-red-600">Error: {error}</div>;
   if (!form) return <p>No product data.</p>;
 
-  // ---------------------------------------------------------
-  // UI
-  // ---------------------------------------------------------
   return (
     <div className="max-w-xl">
       <h1 className="text-2xl font-bold mb-6">Edit Product</h1>
@@ -140,11 +137,11 @@ export default function EditProductPage({ params }: any) {
         />
 
         <input
+          type="number"
           className="border p-2 w-full"
           value={form.price || ""}
           onChange={(e) => update("price", e.target.value)}
           placeholder="Price"
-          type="number"
         />
 
         <input
@@ -169,11 +166,11 @@ export default function EditProductPage({ params }: any) {
         />
 
         <input
+          type="number"
           className="border p-2 w-full"
           value={form.stock || ""}
           onChange={(e) => update("stock", e.target.value)}
           placeholder="Stock"
-          type="number"
         />
 
         <button

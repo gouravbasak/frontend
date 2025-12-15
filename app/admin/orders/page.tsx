@@ -30,7 +30,15 @@ export default function AdminOrdersPage() {
 
   const loadOrders = async () => {
     try {
-      const res = await fetch("http://localhost:4000/api/orders");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE}/api/orders`,
+        {
+          credentials: "include",
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to load");
+
       const data = await res.json();
       setOrders(data);
     } catch (err) {

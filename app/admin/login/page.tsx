@@ -13,6 +13,8 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const API = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -24,7 +26,7 @@ export default function AdminLoginPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:4000/api/admin/login", {
+      const res = await fetch(`${API}/api/admin/login`, {
         method: "POST",
         credentials: "include", // IMPORTANT: accept httpOnly cookie from server
         headers: { "Content-Type": "application/json" },
@@ -97,4 +99,3 @@ export default function AdminLoginPage() {
     </div>
   );
 }
-    

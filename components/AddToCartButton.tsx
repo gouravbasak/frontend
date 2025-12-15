@@ -1,16 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import { useCart } from "../app/context/CartContext";
 import toast from "react-hot-toast";
-import { useCart } from "../app/context/CartContext"; // adjust path if needed
 
 type Props = {
   productId: string;
   title: string;
   price: number;
-  image?: string;
-  qty?: number;
-  className?: string;
+  image?: string | null;
+  stock?: number | null;
 };
 
 export default function AddToCartButton({
@@ -18,40 +17,46 @@ export default function AddToCartButton({
   title,
   price,
   image,
-  qty = 1,
-  className = "",
+  stock,
 }: Props) {
-  const { addItem } = useCart();
+  const { addToCart } = useCart();
+  const [loading, setLoading] = useState(false);
 
-  const handleAdd = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const outOfStock = typeof stock === "number" && stock <= 0;
 
-    if (!productId) {
-      toast.error("Invalid product id");
+  const handleAdd = () => {
+    if (outOfStock) {
+      toast.error("Out of stock");
       return;
     }
 
-    addItem(
-      {
-        productId,
-        title,
-        price,
-        image,
-      },
-      qty
-    );
+    setLoading(true);
 
+    addToCart({
+      productId,
+      title,
+      price,
+      image: image || "/placeholder.png",
+      qty: 1,
+    });
+
+    setLoading(false);
     toast.success("Added to cart");
   };
 
   return (
     <button
       onClick={handleAdd}
-      className={`w-full sm:w-auto sm:flex-1 py-3 rounded-full bg-black text-white text-sm font-semibold hover:opacity-95 transition ${className}`}
-      aria-label="Add to cart"
+      disabled={loading || outOfStock}
+      className={`px-5 py-3 rounded-full font-semibold text-sm transition
+        ${
+          outOfStock
+            ? "bg-gray-300 text-gray-700 cursor-not-allowed"
+            : "bg-black text-white hover:bg-black/80"
+        }
+      `}
     >
-      Add to Cart
+      {loading ? "Adding…" : outOfStock ? "Out of Stock" : "Add to Cart"}
     </button>
   );
 }
