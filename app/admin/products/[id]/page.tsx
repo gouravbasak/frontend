@@ -58,6 +58,8 @@ export default function EditProductPage({ params }: any) {
 
       setForm({
         ...data,
+        actualCost: data.actualCost ?? "",
+        mrp: data.mrp ?? "",
         images: Array.isArray(data.images)
           ? data.images.join(", ")
           : data.images || "",
@@ -88,6 +90,9 @@ export default function EditProductPage({ params }: any) {
         body: JSON.stringify({
           ...form,
           price: Number(form.price),
+          actualCost:
+            form.actualCost !== "" ? Number(form.actualCost) : undefined,
+          mrp: form.mrp !== "" ? Number(form.mrp) : undefined,
           stock: Number(form.stock),
           images: form.images
             ? form.images.split(",").map((s: string) => s.trim())
@@ -141,7 +146,25 @@ export default function EditProductPage({ params }: any) {
           className="border p-2 w-full"
           value={form.price || ""}
           onChange={(e) => update("price", e.target.value)}
-          placeholder="Price"
+          placeholder="Selling Price"
+        />
+
+        {/* NEW: Actual Cost */}
+        <input
+          type="number"
+          className="border p-2 w-full"
+          value={form.actualCost}
+          onChange={(e) => update("actualCost", e.target.value)}
+          placeholder="Actual Cost (your buying price)"
+        />
+
+        {/* NEW: MRP */}
+        <input
+          type="number"
+          className="border p-2 w-full"
+          value={form.mrp}
+          onChange={(e) => update("mrp", e.target.value)}
+          placeholder="MRP (shown to customers)"
         />
 
         <input

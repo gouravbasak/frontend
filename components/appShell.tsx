@@ -8,11 +8,19 @@ type Props = {
   children: React.ReactNode;
 };
 
-const HIDDEN_ROUTES = ["/login", "/signup", "/forgot-password"];
+// Routes where customer chrome should be hidden
+const HIDDEN_ROUTES = [
+  "/login",
+  "/signup",
+  "/forgot-password",
+];
 
 export default function AppShell({ children }: Props) {
   const pathname = usePathname();
-  const hideChrome = HIDDEN_ROUTES.includes(pathname);
+
+  const hideChrome =
+    HIDDEN_ROUTES.includes(pathname) ||
+    pathname.startsWith("/admin");
 
   return (
     <>
@@ -22,6 +30,7 @@ export default function AppShell({ children }: Props) {
           <PromoBar />
         </>
       )}
+
       <main>{children}</main>
     </>
   );

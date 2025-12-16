@@ -13,6 +13,8 @@ export default function AdminNewProductPage() {
     title: "",
     description: "",
     price: "",
+    actualCost: "", // NEW
+    mrp: "",        // NEW
     brand: "",
     category: "",
     images: "",
@@ -29,12 +31,18 @@ export default function AdminNewProductPage() {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...form,
+          title: form.title,
+          description: form.description,
           price: Number(form.price),
-          stock: Number(form.stock),
+          actualCost:
+            form.actualCost !== "" ? Number(form.actualCost) : undefined,
+          mrp: form.mrp !== "" ? Number(form.mrp) : undefined,
+          brand: form.brand,
+          category: form.category,
           images: form.images
             ? form.images.split(",").map((s) => s.trim())
             : [],
+          stock: Number(form.stock),
         }),
       });
 
@@ -73,10 +81,28 @@ export default function AdminNewProductPage() {
 
         <input
           type="number"
-          placeholder="Price"
+          placeholder="Selling Price"
           className="w-full border p-2 rounded"
           value={form.price}
           onChange={(e) => update("price", e.target.value)}
+        />
+
+        {/* NEW: Actual Cost */}
+        <input
+          type="number"
+          placeholder="Actual Cost (your buying price)"
+          className="w-full border p-2 rounded"
+          value={form.actualCost}
+          onChange={(e) => update("actualCost", e.target.value)}
+        />
+
+        {/* NEW: MRP */}
+        <input
+          type="number"
+          placeholder="MRP (shown to customers)"
+          className="w-full border p-2 rounded"
+          value={form.mrp}
+          onChange={(e) => update("mrp", e.target.value)}
         />
 
         <input

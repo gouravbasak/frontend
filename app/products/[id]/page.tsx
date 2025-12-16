@@ -4,7 +4,8 @@ type Product = {
   _id: string;
   title: string;
   description: string;
-  price: number;
+  price: number;     // selling price
+  mrp?: number;      // NEW: original price
   brand: string;
   category: string;
   stock: number;
@@ -27,7 +28,6 @@ export default async function ProductPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-
   const product = await getProduct(id);
 
   if (!product) {
@@ -43,19 +43,30 @@ export default async function ProductPage({
   return (
     <main className="py-10 px-6 max-w-6xl mx-auto">
       <div className="flex flex-col md:flex-row gap-10">
-        
+        {/* Image */}
         <div className="w-full md:w-1/2 rounded-3xl overflow-hidden bg-neutral-100">
-          <img src={imageSrc} alt={product.title} className="w-full h-full object-cover" />
+          <img
+            src={imageSrc}
+            alt={product.title}
+            className="w-full h-full object-cover"
+          />
         </div>
 
+        {/* Details */}
         <div className="w-full md:w-1/2 flex flex-col gap-4">
           <h1 className="text-3xl font-bold">{product.title}</h1>
 
+          {/* PRICE SECTION */}
           <div className="flex items-center gap-3">
-            <span className="text-gray-400 line-through text-sm">
-              ₹{product.price + 500}
+            {product.mrp && product.mrp > product.price && (
+              <span className="text-gray-400 line-through text-sm">
+                ₹{product.mrp}
+              </span>
+            )}
+
+            <span className="text-2xl font-semibold text-black">
+              ₹{product.price}
             </span>
-            <span className="text-2xl font-semibold">₹{product.price}</span>
           </div>
 
           <p className="text-gray-700 text-sm">{product.description}</p>
@@ -74,7 +85,6 @@ export default async function ProductPage({
             </button>
           </div>
         </div>
-
       </div>
     </main>
   );
